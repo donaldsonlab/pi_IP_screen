@@ -1,0 +1,109 @@
+import time
+import subprocess
+import os
+import smtplib
+from email.mime.text import MIMEText
+from board import SCL, SDA
+import busio
+from PIL import Image, ImageDraw, ImageFont
+import adafruit_ssd1306
+
+# Setup email login credentials
+from_address = 'operantbot@gmail.com'
+to_address = 'operantbot@gmail.com'
+subject = 'Test_pi_engineering_bay'
+username = 'operantbot@gmail.com'
+password = 'xxxxxxxxxxxxxxxxx'
+
+# Path to the file storing the last known IP
+ip_file_path = '/home/pi/display_ip_and_email/last_ip.txt'
+
+
+# Create the I2C interface and OLED display setup
+i2c = busio.I2C(SCL, SDA)
+disp = adafruit_ssd1306.SSD1306_I2C(128, 32, i2c)
+
+# Clear display.
+disp.fill(0)
+disp.show()
+
+# Create blank image for drawing on OLED.
+width = disp.width
+height = disp.height
+image = Image.new("1", (width, height))
+
+# Get drawing object to draw on image.
+draw = ImageDraw.Draw(image)
+
+# Load default font for OLED.
+font = ImageFont.load_default()
+
+def get_internal_ip():
+    try:
+        # Run the hostname -I command and capture the output
+        result = subprocess.run(['hostname', '-I'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        # Get the IP address from the output (assuming the first IP is the one you need)
+        internal_ip = result.stdout.strip().split()[0]
+        return internal_ip
+    except Exception as e:
+        return f"Error getting internal IP: {str(e)}"
+
+def send_email(internal_ip):
+    body = f"Oh no, not this again—our IP decided to play hide and seek! Here's the new one: {internal_ip}"
+    msg = MIMEText(body)
+    msg['From'] = from_address
+    msg['To'] = to_address
+    msg['Subject'] = subject
+
+    try:
+        server = smtplib.SMTP('smtp.gmail.com', 587)
+        server.starttls()
+        server.login(username, password)
+        server.sendmail(from_address, to_address, msg.as_string())
+        server.quit()
+        print("Email sent successfully!")
+    except Exception as e:
+        print(f"Failed to send email: {e}")
+
+def read_last_ip():
+    if os.path.exists(ip_file_path):
+        with open(ip_file_path, 'r') as file:
+            return file.read().strip()
+    return None
+
+def write_last_ip(internal_ip):
+    with open(ip_file_path, 'w') as file:
+        file.write(internal_ip)
+
+def update_oled(ip_address):
+    # Clear the OLED display
+    draw.rectangle((0, 0, width, height), outline=0, fill=0)
+
+    # Display the IP address
+    draw.text((0, 0), "IP: " + ip_address, font=font, fill=255)
+
+    # Show the updated image on the OLED display
+    disp.image(image)
+    disp.show()
+
+def main():
+    time.sleep(20)  # Wait for 20 seconds to ensure network is ready
+    current_internal_ip = get_internal_ip()
+
+    if "Error" in current_internal_ip:
+        print(current_internal_ip)
+        return
+
+    # Update the OLED display with the current IP
+    update_oled(current_internal_ip)
+
+    # Check if IP has changed, if so, send an email
+    last_internal_ip = read_last_ip()
+
+    if current_internal_ip != last_internal_ip:
+        print(f"IP changed! New IP: {current_internal_ip}")
+        send_email(current_internal_ip)
+        write_last_ip(current_internal_ip)
+
+if __name__ == "__main__":
+    main()
