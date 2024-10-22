@@ -17,9 +17,9 @@ Virtual environment for package management:
     -subprocess
 
 Setup Instructions: 
-
+```
 1. Create Necessary Directories and Files 
 mkdir ~/rpi_ip
 cd ~/rpi_ip
 touch last_ip.txt credentials.txt
-
+```
