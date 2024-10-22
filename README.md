@@ -6,15 +6,15 @@ Send an email notification when the internal IP changes, providing the new IP.
 The OLED screen is managed via Adafruit's SSD1306 library, and emails are sent using the SMTP protocol. The IP address is monitored, stored, and compared against the last known IP to trigger an email alert if a change is detected.  
 
 **Hardware:**   
-    *Adafruit PiOLED - 128x32 Monochrome OLED    
-    *I2C connections (SCL, SDA)  
+    -Adafruit PiOLED - 128x32 Monochrome OLED    
+    -I2C connections (SCL, SDA)  
 
 **Software:**  
 Virtual environment for package management:       
-    *adafruit-circuitpython-ssd1306  
-    *Pillow  
-    *smtplib  
-    *subprocess
+    -adafruit-circuitpython-ssd1306  
+    -Pillow  
+    -smtplib  
+    -subprocess
 
 **Setup Instructions:**  
 
@@ -64,7 +64,7 @@ Verify that the IP address displays on the OLED screen and an email is sent if t
 
 **6. Automate the Script on Boot**
  To ensure the script runs on every boot, create a shell script that activates the virtual environment and runs the main Python script:  
- 1. Create run_ip_display.sh:
+ 1. Create ```run_ip_display.sh```:
  ```
  cd ~/rpi_ip
 nano run_ip_display.sh
@@ -77,15 +77,15 @@ source /home/pi/rpi_ip/virtual_env/.venv/bin/activate
 # Run your Python script
 python /home/pi/rpi_ip/pi_IP_screen/display_ip_and_email
 ```  
-2. Make the script executable:
+2. Make the script executable:  
 ```chmod +x run_ip_display.sh```  
 
-3. Edit Crontab to run on boot:
-```crontab -e```
+3. Edit Crontab to run on boot:  
+```crontab -e```  
 Add the following line at the end of the file to run the script at boot:  
 ```
-@reboot /home/pi/rpi_ip/run_ip_display.sh
+@reboot /home/pi/rpi_ip/run_ip_display.sh  
 ```
 
-**Conclusion**
+**Conclusion**  
 This setup will display the internal IP address of your Raspberry Pi on an OLED screen and send an email notification whenever the IP changes. By automating it on boot, the IP is always displayed and notifications are sent without manual intervention.
