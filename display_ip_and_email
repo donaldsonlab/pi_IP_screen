@@ -8,15 +8,21 @@ import busio
 from PIL import Image, ImageDraw, ImageFont
 import adafruit_ssd1306
 
-# Setup email login credentials
-from_address = 'operantbot@gmail.com'
-to_address = 'operantbot@gmail.com'
-subject = 'Test_pi_engineering_bay'
-username = 'operantbot@gmail.com'
-password = 'xxxxxxxxxxxxxxxxx'
+# Path to the credentials file and the file storing the last known IP
+credentials_file_path = '/home/pi/ip_display/credentials.txt'
+ip_file_path = '/home/pi/ip_display/last_ip.txt'
 
-# Path to the file storing the last known IP
-ip_file_path = '/home/pi/display_ip_and_email/last_ip.txt'
+# Function to read email credentials from the credentials file
+def read_credentials():
+    credentials = {}
+    if os.path.exists(credentials_file_path):
+        with open(credentials_file_path, 'r') as file:
+            for line in file:
+                key, value = line.strip().split('=')
+                credentials[key] = value
+    else:
+        raise FileNotFoundError(f"Credentials file not found at {credentials_file_path}")
+    return credentials
 
 
 # Create the I2C interface and OLED display setup
@@ -38,6 +44,7 @@ draw = ImageDraw.Draw(image)
 # Load default font for OLED.
 font = ImageFont.load_default()
 
+
 def get_internal_ip():
     try:
         # Run the hostname -I command and capture the output
@@ -48,7 +55,14 @@ def get_internal_ip():
     except Exception as e:
         return f"Error getting internal IP: {str(e)}"
 
-def send_email(internal_ip):
+
+def send_email(internal_ip, credentials):
+    from_address = credentials['from_address']
+    to_address = credentials['to_address']
+    subject = credentials['subject']
+    username = credentials['username']
+    password = credentials['password']
+
     body = f"Oh no, not this again—our IP decided to play hide and seek! Here's the new one: {internal_ip}"
     msg = MIMEText(body)
     msg['From'] = from_address
@@ -65,15 +79,18 @@ def send_email(internal_ip):
     except Exception as e:
         print(f"Failed to send email: {e}")
 
+
 def read_last_ip():
     if os.path.exists(ip_file_path):
         with open(ip_file_path, 'r') as file:
             return file.read().strip()
     return None
 
+
 def write_last_ip(internal_ip):
     with open(ip_file_path, 'w') as file:
         file.write(internal_ip)
+
 
 def update_oled(ip_address):
     # Clear the OLED display
@@ -85,6 +102,7 @@ def update_oled(ip_address):
     # Show the updated image on the OLED display
     disp.image(image)
     disp.show()
+
 
 def main():
     time.sleep(20)  # Wait for 20 seconds to ensure network is ready
@@ -102,8 +120,14 @@ def main():
 
     if current_internal_ip != last_internal_ip:
         print(f"IP changed! New IP: {current_internal_ip}")
-        send_email(current_internal_ip)
+
+        # Load credentials and send email
+        credentials = read_credentials()
+        send_email(current_internal_ip, credentials)
+        
+        # Save the new IP to the file
         write_last_ip(current_internal_ip)
+
 
 if __name__ == "__main__":
     main()
