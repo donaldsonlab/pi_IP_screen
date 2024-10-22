@@ -1,5 +1,5 @@
-**Overview**
-This Python script designed to:
+**Overview**\
+This Python script designed to:\
 
 Display the internal IP address of your Raspberry Pi on an OLED screen.
 Send an email notification when the internal IP changes, providing the new IP.
