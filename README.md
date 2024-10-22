@@ -72,8 +72,10 @@ nano run_ip_display.sh
 Add the following content: 
 ```
 #!/bin/bash
-source virtual_env/.venv/bin/activate
-python3 ip_display.py
+# Activate the virtual environment
+source /home/pi/rpi_ip/virtual_env/.venv/bin/activate
+# Run your Python script
+python /home/pi/rpi_ip/pi_IP_screen/display_ip_and_email
 ```  
 2. Make the script executable:
 ```chmod +x run_ip_display.sh```  
